@@ -1,0 +1,42 @@
+{
+  "name": "pathy",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stephenbunch/pathy"
+  },
+  "author": "Stephen Bunch",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/stephenbunch/pathy/issues"
+  },
+  "homepage": "https://github.com/stephenbunch/pathy",
+  "devDependencies": {
+    "chai": "^1.9.1",
+    "gulp": "^3.8.8",
+    "gulp-concat": "^2.4.0",
+    "gulp-filter": "^1.0.2",
+    "gulp-jshint": "^1.8.4",
+    "gulp-karma": "git+https://github.com/lazd/gulp-karma.git#helper",
+    "gulp-order": "^1.1.1",
+    "gulp-rename": "^1.2.0",
+    "gulp-sourcemaps": "^1.1.5",
+    "gulp-uglify": "^1.0.1",
+    "jshint-stylish": "^0.4.0",
+    "karma": "^0.12.23",
+    "karma-chrome-launcher": "^0.1.4",
+    "karma-mocha": "^0.1.9",
+    "karma-phantomjs-launcher": "^0.1.4",
+    "mocha": "^1.21.4",
+    "require-directory": "^2.0.0",
+    "run-sequence": "^0.3.6",
+    "sinon": "^1.10.3",
+    "sinon-chai": "^2.5.0",
+    "through2": "^0.6.1"
+  }
+}
