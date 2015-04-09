@@ -6,14 +6,14 @@ module.exports = function( config ) {
     frameworks: [ 'mocha' ],
 
     files: [
-        'dist/' + pkg.name + '.js',
-        { pattern: 'dist/' + pkg.name + '.js.map', included: false },
-        { pattern: 'src/**/*.js', included: false },
-
         'node_modules/chai/chai.js',
         'node_modules/sinon/pkg/sinon.js',
         'node_modules/sinon-chai/lib/sinon-chai.js',
         'test/_karma.js',
+
+        'dist/' + pkg.name + '.js',
+        { pattern: 'dist/' + pkg.name + '.js.map', included: false },
+        { pattern: 'src/**/*.js', included: false },
 
         'test/**/*.spec.js'
     ],
