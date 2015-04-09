@@ -3,7 +3,7 @@ describe( 'Path', function() {
     it( 'should call the listener whenever the value at the specified path changes', function() {
       var obj = {};
       var stub = sinon.stub();
-      var unwatch = path( 'foo.bar.baz' ).watch( obj, stub );
+      var unwatch = pathy( 'foo.bar.baz' ).watch( obj, stub );
       obj.foo = { bar: { baz: 2 } };
       expect( stub ).to.have.been.calledWith({ newval: 2, oldval: undefined });
       obj.foo.bar.baz = 3;
@@ -14,7 +14,7 @@ describe( 'Path', function() {
     it( 'should return an unwatch function', function() {
       var obj = {};
       var stub = sinon.stub();
-      var unwatch = path( 'foo' ).watch( obj, stub );
+      var unwatch = pathy( 'foo' ).watch( obj, stub );
       unwatch();
       obj.foo = 2;
       expect( stub ).to.not.have.been.called;
@@ -23,7 +23,7 @@ describe( 'Path', function() {
     it( 'should not call the listener even if objects change in the middle of the path', function() {
       var obj = { foo: { bar: { baz: 2 } } };
       var stub = sinon.stub();
-      var unwatch = path( 'foo.bar.baz' ).watch( obj, stub );
+      var unwatch = pathy( 'foo.bar.baz' ).watch( obj, stub );
       obj.foo = { bar: { baz: 2 } };
       expect( stub ).to.not.have.been.called;
       obj.foo.bar = { baz: 3 };
@@ -48,7 +48,7 @@ describe( 'Path', function() {
         }
       });
       var stub = sinon.stub();
-      var unwatch = path( 'foo' ).watch( obj, stub );
+      var unwatch = pathy( 'foo' ).watch( obj, stub );
       obj.foo = 3;
       expect( stub ).to.not.have.been.called;
       enabled = true;
@@ -60,7 +60,7 @@ describe( 'Path', function() {
     it( 'should not follow non object values', function() {
       var obj = { foo: null };
       var stub = sinon.stub();
-      var unwatch = path( 'foo.bar' ).watch( obj, stub );
+      var unwatch = pathy( 'foo.bar' ).watch( obj, stub );
       obj.foo = 2;
       expect( stub ).to.not.have.been.called;
       obj.foo = { bar: null };
@@ -73,7 +73,7 @@ describe( 'Path', function() {
     it( 'should return a restore function', function() {
       var obj = {};
       var value;
-      var cleanup = path( 'foo.bar' ).override( obj, {
+      var cleanup = pathy( 'foo.bar' ).override( obj, {
         get: function() {
           return value;
         },
@@ -93,7 +93,7 @@ describe( 'Path', function() {
     it( 'should maintain the object graph if the persist option is true', function() {
       var obj = {};
       var value;
-      var cleanup = path( 'foo.bar.baz' ).override( obj, {
+      var cleanup = pathy( 'foo.bar.baz' ).override( obj, {
         persist: true,
         get: function() {
           return value;
@@ -114,7 +114,7 @@ describe( 'Path', function() {
     it( 'should run the base value through the setter anytime the property is rebuilt', function() {
       var obj = { foo: { bar: { baz: 2 } } };
       var stub = sinon.stub();
-      var cleanup = path( 'foo.bar.baz' ).override( obj, {
+      var cleanup = pathy( 'foo.bar.baz' ).override( obj, {
         set: stub
       });
       obj.foo = 3;
@@ -128,7 +128,7 @@ describe( 'Path', function() {
     it( 'should not copy the property value if initialize option is false', function() {
       var obj = { foo: 2 };
       var stub = sinon.stub();
-      var cleanup = path( 'foo' ).override( obj, {
+      var cleanup = pathy( 'foo' ).override( obj, {
         initialize: false,
         set: stub
       });
@@ -140,20 +140,20 @@ describe( 'Path', function() {
   describe( '.get( obj )', function() {
     it( 'should get the value at the specified path or undefined', function() {
       var obj = { foo: { bar: { baz: 2 } } };
-      expect( path( 'foo.bar.baz' ).get( obj ) ).to.equal( 2 );
-      expect( path( 'foo.qux' ).get( obj ) ).to.be.undefined;
+      expect( pathy( 'foo.bar.baz' ).get( obj ) ).to.equal( 2 );
+      expect( pathy( 'foo.qux' ).get( obj ) ).to.be.undefined;
     });
 
     it( 'should return undefined on non-objects', function() {
-      expect( path( 'foo.bar.baz' ).get( null ) ).to.be.undefined;
-      expect( path( 'foo.bar.baz' ).get( 2 ) ).to.be.undefined;
+      expect( pathy( 'foo.bar.baz' ).get( null ) ).to.be.undefined;
+      expect( pathy( 'foo.bar.baz' ).get( 2 ) ).to.be.undefined;
     });
   });
 
   describe( '.set( obj, value )', function() {
     it( 'should set the value at the specified path even if intermediaries are missing', function() {
       var obj = {};
-      path( 'foo.bar.baz' ).set( obj, 2 );
+      pathy( 'foo.bar.baz' ).set( obj, 2 );
       expect( obj ).to.eql({ foo: { bar: { baz: 2 } } });
     });
   });

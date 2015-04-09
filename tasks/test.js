@@ -11,7 +11,7 @@ chai.use( sinonChai );
 
 gulp.task( 'test:node', function() {
   var mocha = new Mocha({ bail: true });
-  global.path = require( '../index' );
+  global[ pkg.name ] = require( '../index' );
   global.expect = chai.expect;
   global.sinon = require( 'sinon' );
 
