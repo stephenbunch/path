@@ -67,6 +67,19 @@ describe( 'Path', function() {
       expect( stub ).to.have.been.calledWith({ newval: null, oldval: undefined });
       unwatch();
     });
+
+    it( 'should support multiple watchers', function() {
+      var obj = { foo: 2 };
+      var stub1 = sinon.stub();
+      var stub2 = sinon.stub();
+      var unwatch1 = pathy( 'foo' ).watch( obj, stub1 );
+      var unwatch2 = pathy( 'foo' ).watch( obj, stub2 );
+      obj.foo = 3;
+      expect( stub1 ).to.have.been.called;
+      expect( stub2 ).to.have.been.called;
+      unwatch1();
+      unwatch2();
+    });
   });
 
   describe( '.override( obj, descriptor )', function() {

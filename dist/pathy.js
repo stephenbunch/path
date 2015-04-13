@@ -84,6 +84,9 @@ Path.prototype.watch = function( obj, listener ) {
   var curval;
   var initialized = false;
   var restoreFunc = this.override( obj, {
+    get: function() {
+      return this.$super();
+    },
     set: function( value ) {
       if ( !initialized ) {
         curval = value;
