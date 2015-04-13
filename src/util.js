@@ -16,3 +16,10 @@ function extend( target, source ) {
   }
   return target;
 }
+
+function bind( func, context ) {
+  var args = Array.prototype.slice.call( arguments, 2 );
+  return function() {
+    return func.apply( context, args.concat( Array.prototype.slice.call( arguments ) ) );
+  };
+}

@@ -139,7 +139,7 @@ function overrideProperty( obj, prop, descriptor ) {
   var superGet =
     superDescriptor &&
     superDescriptor.get &&
-    superDescriptor.get.bind( obj ) ||
+    bind( superDescriptor.get, obj ) ||
     function() {
       return value;
     };
@@ -147,7 +147,7 @@ function overrideProperty( obj, prop, descriptor ) {
   var superSet =
     superDescriptor &&
     superDescriptor.set &&
-    superDescriptor.set.bind( obj ) ||
+    bind( superDescriptor.set, obj ) ||
     function( newval ) {
       value = newval;
     };
@@ -257,7 +257,7 @@ function watch( obj, prop, listener ) {
   }
 
   listeners[ prop ].push( listener );
-  return unwatch.bind( undefined, obj, prop, listener );
+  return bind( unwatch, undefined, obj, prop, listener );
 }
 
 function unwatch( obj, prop, listener ) {
