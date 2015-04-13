@@ -135,6 +135,21 @@ describe( 'Path', function() {
       expect( stub ).to.not.have.been.called;
       cleanup();
     });
+
+    it( 'should not throw an error with read-only descriptors', function() {
+      var obj = { foo: 2 };
+      var stub = sinon.stub();
+      var cleanup = pathy( 'foo' ).override( obj, {
+        get: function() {
+          stub();
+          return this.$super();
+        }
+      });
+      var x = obj.foo;
+      expect( x ).to.equal( 2 );
+      expect( stub ).to.have.been.called;
+      cleanup();
+    });
   });
 
   describe( '.get( obj )', function() {

@@ -43,7 +43,7 @@ Path.prototype.override = function( obj, descriptor ) {
       if ( index === last ) {
         var property = overrideProperty( obj, prop, descriptor );
         override.restore = property.restore;
-        if ( initialize ) {
+        if ( initialize && !!descriptor.set ) {
           obj[ prop ] = property.$super();
         }
       } else {
