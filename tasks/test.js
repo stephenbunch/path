@@ -1,17 +1,16 @@
 var gulp = require( 'gulp' );
-var karma = require( 'gulp-karma' )({ configFile: 'karma.conf.js' });
-var sequence = require( 'run-sequence' );
-var through2 = require( 'through2' );
-var Mocha = require( 'mocha' );
-var chai = require( 'chai' );
-var pkg = require( '../package' );
-
-var sinonChai = require( 'sinon-chai' );
-chai.use( sinonChai );
 
 gulp.task( 'test:node', function() {
+  var through2 = require( 'through2' );
+  var Mocha = require( 'mocha' );
+  var chai = require( 'chai' );
+  var pkg = require( APP_ROOT + '/package' );
+
+  var sinonChai = require( 'sinon-chai' );
+  chai.use( sinonChai );
+
   var mocha = new Mocha({ bail: true });
-  global[ pkg.name ] = require( '../index' );
+  global[ pkg.name ] = require( APP_ROOT + '/src/index' );
   global.expect = chai.expect;
   global.sinon = require( 'sinon' );
 
@@ -26,7 +25,7 @@ gulp.task( 'test:node', function() {
           err.failures = failures;
           cb( err );
         } else {
-          delete global.path;
+          delete global[ pkg.name ];
           delete global.expect;
           delete global.sinon;
           cb( null );
@@ -37,11 +36,12 @@ gulp.task( 'test:node', function() {
 });
 
 gulp.task( 'test:browser', function() {
+  var karma = require( 'gulp-karma' )({ configFile: 'karma.conf.js' });
   return karma.once({
     browsers: [ 'PhantomJS' ]
   });
 });
 
 gulp.task( 'test', function( done ) {
-  sequence([ 'test:browser', 'test:node' ], done );
+  require( 'run-sequence' )([ 'test:browser', 'test:node' ], done );
 });
