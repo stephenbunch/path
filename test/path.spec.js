@@ -3,32 +3,21 @@ describe( 'Path', function() {
     it( 'should call the listener whenever the value at the specified path changes', function() {
       var obj = {};
       var stub = sinon.stub();
-      var unwatch = pathy( 'foo.bar.baz' ).watch( obj, stub );
+      pathy( 'foo.bar.baz' ).watch( obj, stub );
       obj.foo = { bar: { baz: 2 } };
-      expect( stub ).to.have.been.calledWith({ newval: 2, oldval: undefined });
+      expect( stub ).to.have.been.calledWith( 2, undefined );
       obj.foo.bar.baz = 3;
-      expect( stub ).to.have.been.calledWith({ newval: 3, oldval: 2 });
-      unwatch();
-    });
-
-    it( 'should return an unwatch function', function() {
-      var obj = {};
-      var stub = sinon.stub();
-      var unwatch = pathy( 'foo' ).watch( obj, stub );
-      unwatch();
-      obj.foo = 2;
-      expect( stub ).to.not.have.been.called;
+      expect( stub ).to.have.been.calledWith( 3, 2 );
     });
 
     it( 'should not call the listener even if objects change in the middle of the path', function() {
       var obj = { foo: { bar: { baz: 2 } } };
       var stub = sinon.stub();
-      var unwatch = pathy( 'foo.bar.baz' ).watch( obj, stub );
+      pathy( 'foo.bar.baz' ).watch( obj, stub );
       obj.foo = { bar: { baz: 2 } };
       expect( stub ).to.not.have.been.called;
       obj.foo.bar = { baz: 3 };
-      expect( stub ).to.have.been.calledWith({ newval: 3, oldval: 2 });
-      unwatch();
+      expect( stub ).to.have.been.calledWith( 3, 2 );
     });
 
     it( 'should wrap existing property descriptors', function() {
@@ -48,37 +37,44 @@ describe( 'Path', function() {
         }
       });
       var stub = sinon.stub();
-      var unwatch = pathy( 'foo' ).watch( obj, stub );
+      pathy( 'foo' ).watch( obj, stub );
       obj.foo = 3;
       expect( stub ).to.not.have.been.called;
       enabled = true;
       obj.foo = 3;
-      expect( stub ).to.have.been.calledWith({ newval: 3, oldval: 2 });
-      unwatch();
+      expect( stub ).to.have.been.calledWith( 3, 2 );
     });
 
     it( 'should not follow non object values', function() {
       var obj = { foo: null };
       var stub = sinon.stub();
-      var unwatch = pathy( 'foo.bar' ).watch( obj, stub );
+      pathy( 'foo.bar' ).watch( obj, stub );
       obj.foo = 2;
       expect( stub ).to.not.have.been.called;
       obj.foo = { bar: null };
-      expect( stub ).to.have.been.calledWith({ newval: null, oldval: undefined });
-      unwatch();
+      expect( stub ).to.have.been.calledWith( null, undefined );
     });
 
     it( 'should support multiple watchers', function() {
       var obj = { foo: 2 };
       var stub1 = sinon.stub();
       var stub2 = sinon.stub();
-      var unwatch1 = pathy( 'foo' ).watch( obj, stub1 );
-      var unwatch2 = pathy( 'foo' ).watch( obj, stub2 );
+      pathy( 'foo' ).watch( obj, stub1 );
+      pathy( 'foo' ).watch( obj, stub2 );
       obj.foo = 3;
       expect( stub1 ).to.have.been.called;
       expect( stub2 ).to.have.been.called;
-      unwatch1();
-      unwatch2();
+    });
+  });
+
+  describe( '.unwatch( obj, listener )', function() {
+    it( 'should remove the listener from the watch', function() {
+      var obj = {};
+      var stub = sinon.stub();
+      pathy( 'foo' ).watch( obj, stub );
+      pathy( 'foo' ).unwatch( obj, stub );
+      obj.foo = 2;
+      expect( stub ).to.not.have.been.called;
     });
   });
 
@@ -86,7 +82,7 @@ describe( 'Path', function() {
     it( 'should return a restore function', function() {
       var obj = {};
       var value;
-      var cleanup = pathy( 'foo.bar' ).override( obj, {
+      var restore = pathy( 'foo.bar' ).override( obj, {
         get: function() {
           return value;
         },
@@ -98,7 +94,7 @@ describe( 'Path', function() {
       expect( value ).to.equal( 2 );
       obj.foo.bar = 3;
       expect( value ).to.equal( 3 );
-      cleanup();
+      restore();
       obj.foo.bar = 4;
       expect( value ).to.equal( 3 );
     });
@@ -106,7 +102,7 @@ describe( 'Path', function() {
     it( 'should maintain the object graph if the persist option is true', function() {
       var obj = {};
       var value;
-      var cleanup = pathy( 'foo.bar.baz' ).override( obj, {
+      var restore = pathy( 'foo.bar.baz' ).override( obj, {
         persist: true,
         get: function() {
           return value;
@@ -119,7 +115,7 @@ describe( 'Path', function() {
       expect( obj.foo.bar.baz ).to.equal( 2 );
       obj.foo = {};
       expect( obj.foo.bar.baz ).to.equal( undefined );
-      cleanup();
+      restore();
       obj.foo.bar.baz = 3;
       expect( value ).to.be.undefined;
     });
@@ -127,7 +123,7 @@ describe( 'Path', function() {
     it( 'should run the base value through the setter anytime the property is rebuilt', function() {
       var obj = { foo: { bar: { baz: 2 } } };
       var stub = sinon.stub();
-      var cleanup = pathy( 'foo.bar.baz' ).override( obj, {
+      var restore = pathy( 'foo.bar.baz' ).override( obj, {
         set: stub
       });
       obj.foo = 3;
@@ -135,24 +131,24 @@ describe( 'Path', function() {
       expect( stub ).to.have.been.calledTwice;
       obj.foo = { bar: { baz: 2 } };
       expect( stub ).to.have.been.calledThrice;
-      cleanup();
+      restore();
     });
 
     it( 'should not copy the property value if initialize option is false', function() {
       var obj = { foo: 2 };
       var stub = sinon.stub();
-      var cleanup = pathy( 'foo' ).override( obj, {
+      var restore = pathy( 'foo' ).override( obj, {
         initialize: false,
         set: stub
       });
       expect( stub ).to.not.have.been.called;
-      cleanup();
+      restore();
     });
 
     it( 'should not throw an error with read-only descriptors', function() {
       var obj = { foo: 2 };
       var stub = sinon.stub();
-      var cleanup = pathy( 'foo' ).override( obj, {
+      var restore = pathy( 'foo' ).override( obj, {
         get: function() {
           stub();
           return this.$super();
@@ -161,7 +157,7 @@ describe( 'Path', function() {
       var x = obj.foo;
       expect( x ).to.equal( 2 );
       expect( stub ).to.have.been.called;
-      cleanup();
+      restore();
     });
   });
 

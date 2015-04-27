@@ -80,30 +80,61 @@ export default class Path {
   }
 
   watch( obj, listener ) {
-    var curval;
-    var initialized = false;
-    var restoreFunc = this.override( obj, {
-      get: function() {
-        return this.$super();
-      },
-      set: function( value ) {
-        if ( !initialized ) {
-          curval = value;
-        } else {
-          value = this.$super( value );
-          if ( value !== curval ) {
-            var oldval = curval;
+    if ( !obj ) {
+      return;
+    }
+    var store = obj.$$pathListeners;
+    if ( !store ) {
+      Object.defineProperty( obj, '$$pathListeners', {
+        value: {},
+        configurable: false,
+        enumerable: false
+      });
+      store = obj.$$pathListeners;
+    }
+    if ( !store[ this.value ] ) {
+      var listeners = store[ this.value ] = [];
+      var curval;
+      var initialized = false;
+      var restore = this.override( obj, {
+        get: function() {
+          return this.$super();
+        },
+        set: function( value ) {
+          if ( !initialized ) {
             curval = value;
-            listener.call( undefined, {
-              oldval: oldval,
-              newval: value
-            });
+          } else {
+            value = this.$super( value );
+            if ( value !== curval ) {
+              var oldval = curval;
+              curval = value;
+              listeners.slice().forEach( function( listener ) {
+                listener.call( undefined, value, oldval );
+              });
+            }
           }
         }
+      });
+      initialized = true;
+      listeners.destroy = ( function( path ) {
+        restore();
+        delete store[ path ];
+      }).bind( undefined, this.value );
+    }
+    store[ this.value ].push( listener );
+  }
+
+  unwatch( obj, listener ) {
+    var listeners = obj && obj.$$pathListeners;
+    if ( listeners && listeners[ this.value ] ) {
+      var index = listeners[ this.value ].indexOf( listener );
+      if ( index > -1 ) {
+        listeners[ this.value ].splice( index, 1 );
+        if ( listeners[ this.value ].length === 0 ) {
+          listeners[ this.value ].destroy();
+        }
       }
-    });
-    initialized = true;
-    return restoreFunc;
+    }
   }
 
   get( obj ) {

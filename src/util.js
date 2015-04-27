@@ -98,15 +98,15 @@ export function overrideProperty( obj, prop, descriptor ) {
 }
 
 export function watch( obj, prop, listener ) {
-  if ( !obj.hasOwnProperty( '$$pathListeners' ) ) {
-    Object.defineProperty( obj, '$$pathListeners', {
+  if ( !obj.hasOwnProperty( '$$propListeners' ) ) {
+    Object.defineProperty( obj, '$$propListeners', {
       value: {},
       configurable: false,
       enumerable: false
     });
   }
 
-  var listeners = obj.$$pathListeners;
+  var listeners = obj.$$propListeners;
   if ( !listeners[ prop ] ) {
     listeners[ prop ] = [];
     var descriptor = Object.getOwnPropertyDescriptor( obj, prop );
@@ -150,7 +150,7 @@ export function watch( obj, prop, listener ) {
 }
 
 export function unwatch( obj, prop, listener ) {
-  var listeners = obj.$$pathListeners;
+  var listeners = obj.$$propListeners;
   if ( listeners && listeners[ prop ] ) {
     var index = listeners[ prop ].indexOf( listener );
     if ( index > -1 ) {
