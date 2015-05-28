@@ -4,8 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/.bin/gulp test",
-    "postinstall": "node_modules/.bin/gulp make"
+    "test": "node_modules/.bin/gulp test"
   },
   "repository": {
     "type": "git",
