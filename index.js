@@ -1,2 +1,1 @@
-var pkg = require( './package' );
-module.exports = require( './dist/' + pkg.name );
+module.exports = require( './lib/index' );

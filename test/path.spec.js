@@ -1,9 +1,11 @@
+import path from '../src/index';
+
 describe( 'Path', function() {
   describe( '.watch( obj, listener )', function() {
     it( 'should call the listener whenever the value at the specified path changes', function() {
       var obj = {};
       var stub = sinon.stub();
-      pathy( 'foo.bar.baz' ).watch( obj, stub );
+      path( 'foo.bar.baz' ).watch( obj, stub );
       obj.foo = { bar: { baz: 2 } };
       expect( stub ).to.have.been.calledWith( 2, undefined );
       obj.foo.bar.baz = 3;
@@ -13,7 +15,7 @@ describe( 'Path', function() {
     it( 'should not call the listener even if objects change in the middle of the path', function() {
       var obj = { foo: { bar: { baz: 2 } } };
       var stub = sinon.stub();
-      pathy( 'foo.bar.baz' ).watch( obj, stub );
+      path( 'foo.bar.baz' ).watch( obj, stub );
       obj.foo = { bar: { baz: 2 } };
       expect( stub ).to.not.have.been.called;
       obj.foo.bar = { baz: 3 };
@@ -37,7 +39,7 @@ describe( 'Path', function() {
         }
       });
       var stub = sinon.stub();
-      pathy( 'foo' ).watch( obj, stub );
+      path( 'foo' ).watch( obj, stub );
       obj.foo = 3;
       expect( stub ).to.not.have.been.called;
       enabled = true;
@@ -48,7 +50,7 @@ describe( 'Path', function() {
     it( 'should not follow non object values', function() {
       var obj = { foo: null };
       var stub = sinon.stub();
-      pathy( 'foo.bar' ).watch( obj, stub );
+      path( 'foo.bar' ).watch( obj, stub );
       obj.foo = 2;
       expect( stub ).to.not.have.been.called;
       obj.foo = { bar: null };
@@ -59,8 +61,8 @@ describe( 'Path', function() {
       var obj = { foo: 2 };
       var stub1 = sinon.stub();
       var stub2 = sinon.stub();
-      pathy( 'foo' ).watch( obj, stub1 );
-      pathy( 'foo' ).watch( obj, stub2 );
+      path( 'foo' ).watch( obj, stub1 );
+      path( 'foo' ).watch( obj, stub2 );
       obj.foo = 3;
       expect( stub1 ).to.have.been.called;
       expect( stub2 ).to.have.been.called;
@@ -71,8 +73,8 @@ describe( 'Path', function() {
     it( 'should remove the listener from the watch', function() {
       var obj = {};
       var stub = sinon.stub();
-      pathy( 'foo' ).watch( obj, stub );
-      pathy( 'foo' ).unwatch( obj, stub );
+      path( 'foo' ).watch( obj, stub );
+      path( 'foo' ).unwatch( obj, stub );
       obj.foo = 2;
       expect( stub ).to.not.have.been.called;
     });
@@ -82,7 +84,7 @@ describe( 'Path', function() {
     it( 'should return a restore function', function() {
       var obj = {};
       var value;
-      var restore = pathy( 'foo.bar' ).override( obj, {
+      var restore = path( 'foo.bar' ).override( obj, {
         get: function() {
           return value;
         },
@@ -102,7 +104,7 @@ describe( 'Path', function() {
     it( 'should maintain the object graph if the persist option is true', function() {
       var obj = {};
       var value;
-      var restore = pathy( 'foo.bar.baz' ).override( obj, {
+      var restore = path( 'foo.bar.baz' ).override( obj, {
         persist: true,
         get: function() {
           return value;
@@ -123,7 +125,7 @@ describe( 'Path', function() {
     it( 'should run the base value through the setter anytime the property is rebuilt', function() {
       var obj = { foo: { bar: { baz: 2 } } };
       var stub = sinon.stub();
-      var restore = pathy( 'foo.bar.baz' ).override( obj, {
+      var restore = path( 'foo.bar.baz' ).override( obj, {
         set: stub
       });
       obj.foo = 3;
@@ -137,7 +139,7 @@ describe( 'Path', function() {
     it( 'should not copy the property value if initialize option is false', function() {
       var obj = { foo: 2 };
       var stub = sinon.stub();
-      var restore = pathy( 'foo' ).override( obj, {
+      var restore = path( 'foo' ).override( obj, {
         initialize: false,
         set: stub
       });
@@ -148,7 +150,7 @@ describe( 'Path', function() {
     it( 'should not throw an error with read-only descriptors', function() {
       var obj = { foo: 2 };
       var stub = sinon.stub();
-      var restore = pathy( 'foo' ).override( obj, {
+      var restore = path( 'foo' ).override( obj, {
         get: function() {
           stub();
           return this.$super();
@@ -164,20 +166,20 @@ describe( 'Path', function() {
   describe( '.get( obj )', function() {
     it( 'should get the value at the specified path or undefined', function() {
       var obj = { foo: { bar: { baz: 2 } } };
-      expect( pathy( 'foo.bar.baz' ).get( obj ) ).to.equal( 2 );
-      expect( pathy( 'foo.qux' ).get( obj ) ).to.be.undefined;
+      expect( path( 'foo.bar.baz' ).get( obj ) ).to.equal( 2 );
+      expect( path( 'foo.qux' ).get( obj ) ).to.be.undefined;
     });
 
     it( 'should return undefined on non-objects', function() {
-      expect( pathy( 'foo.bar.baz' ).get( null ) ).to.be.undefined;
-      expect( pathy( 'foo.bar.baz' ).get( 2 ) ).to.be.undefined;
+      expect( path( 'foo.bar.baz' ).get( null ) ).to.be.undefined;
+      expect( path( 'foo.bar.baz' ).get( 2 ) ).to.be.undefined;
     });
   });
 
   describe( '.set( obj, value )', function() {
     it( 'should set the value at the specified path even if intermediaries are missing', function() {
       var obj = {};
-      pathy( 'foo.bar.baz' ).set( obj, 2 );
+      path( 'foo.bar.baz' ).set( obj, 2 );
       expect( obj ).to.eql({ foo: { bar: { baz: 2 } } });
     });
   });

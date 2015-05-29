@@ -1,46 +1,23 @@
 {
-  "name": "pathy",
-  "version": "0.0.1",
-  "description": "",
+  "name": "@stephenbunch/path",
+  "version": "0.1.0",
+  "description": "Provides simple object manipulation using path strings.",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/.bin/gulp test"
+    "prepublish": "gulp"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/stephenbunch/pathy"
+    "url": "https://github.com/stephenbunch/path"
   },
   "author": "Stephen Bunch",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/stephenbunch/pathy/issues"
+    "url": "https://github.com/stephenbunch/path/issues"
   },
-  "homepage": "https://github.com/stephenbunch/pathy",
-  "dependencies": {
-    "babel": "^5.1.10",
-    "babelify": "^6.0.2",
-    "browserify": "^9.0.8",
-    "gulp": "^3.8.8",
-    "gulp-babel": "^5.1.0",
-    "gulp-jshint": "^1.8.4",
-    "jshint-stylish": "^0.4.0",
-    "merge-stream": "^0.1.7",
-    "require-directory": "^2.0.0"
-  },
+  "homepage": "https://github.com/stephenbunch/path",
   "devDependencies": {
-    "chai": "^1.9.1",
-    "del": "^1.1.1",
-    "gulp-connect": "^2.2.0",
-    "gulp-karma": "git+https://github.com/lazd/gulp-karma.git#helper",
-    "karma": "^0.12.23",
-    "karma-chrome-launcher": "^0.1.4",
-    "karma-mocha": "^0.1.9",
-    "karma-phantomjs-launcher": "^0.1.4",
-    "mocha": "^1.21.4",
-    "run-sequence": "^0.3.6",
-    "sinon": "^1.10.3",
-    "sinon-chai": "^2.5.0",
-    "through2": "^0.6.5",
-    "vinyl-source-stream": "^1.1.0"
+    "@stephenbunch/buildpack": "^0.1.0",
+    "gulp": "^3.8.11"
   }
 }
