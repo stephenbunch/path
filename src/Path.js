@@ -1,167 +1,177 @@
-import {
-  forEach,
-  extend,
-  overrideProperty,
-  watch,
-  unwatch
-} from './util';
+import { overrideProperty } from './util';
+
+const pathListenersKey = Symbol();
+
+function isValidObject( obj ) {
+  return typeof obj === 'object' && obj !== null;
+}
+
+function isPropWritable( obj, prop ) {
+  var descriptor = Object.getOwnPropertyDescriptor( obj, prop );
+  return !!( descriptor && ( descriptor.set || descriptor.writable ) );
+}
 
 export default class Path {
-  constructor( path ) {
-    this.value = path;
-    this.path = path.split( '.' );
+  constructor( value ) {
+    this.value = value;
+    this.segments = value.split( '.' );
   }
 
   override( obj, descriptor ) {
-    var overrides = [{ value: obj }];
-    var path = this.path.slice();
-    var last = path.length - 1;
-
-    descriptor = extend({
-      enumerable: true,
-      configurable: true,
-      persist: false,
-      initialize: true
-    }, descriptor );
-
-    var persist = descriptor.persist;
-    var initialize = descriptor.initialize;
-    delete descriptor.persist;
-    delete descriptor.initialize;
-
-    function setup( position ) {
-      forEach( path, function( prop, index ) {
-        if ( index < position ) {
-          return;
-        }
-
-        var obj = overrides[ index ].value;
-        var override = {};
-        overrides.push( override );
-
-        if ( index === last ) {
-          var property = overrideProperty( obj, prop, descriptor );
-          override.restore = property.restore;
-          if ( initialize && !!descriptor.set ) {
-            obj[ prop ] = property.$super();
-          }
-        } else {
-          override.value = obj[ prop ];
-          override.restore = watch( obj, prop, function( e ) {
-            override.value = e.newval;
-            if ( typeof e.oldval === 'object' ) {
-              restore( index + 1 );
-            }
-            if ( typeof e.newval === 'object' ) {
-              setup( index + 1 );
-            }
-          });
-          if ( typeof override.value !== 'object' || override.value === null ) {
-            if ( !persist ) {
-              return false;
-            } else {
-              override.value = obj[ prop ] = {};
-            }
-          }
-        }
-      });
-    }
-
-    function restore( position ) {
-      overrides.splice( position + 1 ).reverse().forEach( function( override ) {
-        override.restore();
-      });
-    }
-
-    setup( 0 );
-    return function() {
-      restore( 0 );
+    this._validateObject( obj );
+    var restore = [];
+    var teardown = index => {
+      restore.splice( index ).reverse().forEach( func => func() );
     };
+    var setup = ( index, node, set ) => {
+      // Remove all the property overrides from this path segment and down.
+      teardown( index );
+      // Setup new overrides as long as there's a valid node in the path.
+      var i = index;
+      for ( ; i < this.segments.length - 1; i++ ) {
+        if ( !isValidObject( node ) ) {
+          break;
+        }
+        let prop = this.segments[ i ];
+        if ( descriptor.persist && !isValidObject( node[ prop ] ) ) {
+          node[ prop ] = {};
+        }
+        restore[ i ] = overrideProperty( node, prop, {
+          configurable: true,
+          enumerable: true,
+          get( $super ) {
+            return $super();
+          },
+          set( value, $super ) {
+            if ( value !== $super() ) {
+              if ( descriptor.persist && !isValidObject( value ) ) {
+                value = {};
+              }
+              $super( value );
+              setup( index + 1, value, true );
+            }
+          }
+        });
+        node = node[ prop ];
+      }
+      // Setup the last segment.
+      if ( i === this.segments.length - 1 && isValidObject( node ) ) {
+        let prop = this.segments[ i ];
+
+        // If this is a set operation, run the value through the setter to
+        // trigger any handlers.
+        let value;
+        let applySetter = false;
+        if ( set && isPropWritable( node, prop ) ) {
+          value = node[ prop ];
+          applySetter = true;
+        }
+
+        restore[ i ] = overrideProperty( node, prop, {
+          configurable: true,
+          enumerable: true,
+          get: descriptor.get,
+          set: descriptor.set
+        });
+
+        if ( applySetter ) {
+          node[ prop ] = value;
+        }
+      } else if ( set && descriptor.set ) {
+        // This actually doesn't make sense in the context of overriding a
+        // property setter since the owning object doesn't exist. But the
+        // purpose of this library is to be able to override the path as a
+        // whole, so when the owning object becomes undefined, it makes sense to
+        // pass undefined to the setter since the value at that particular path
+        // is now undefined.
+        descriptor.set( undefined, () => {} );
+      }
+    };
+    setup( 0, obj, false );
+    return function() {
+      teardown( 0 );
+    }
   }
 
   watch( obj, listener ) {
-    if ( !obj ) {
-      return;
-    }
-    var store = obj.$$pathListeners;
+    this._validateObject( obj );
+    var store = obj[ pathListenersKey ];
     if ( !store ) {
-      Object.defineProperty( obj, '$$pathListeners', {
-        value: {},
-        configurable: false,
-        enumerable: false
-      });
-      store = obj.$$pathListeners;
+      store = obj[ pathListenersKey ] = {};
     }
-    if ( !store[ this.value ] ) {
-      var listeners = store[ this.value ] = [];
-      var curval;
-      var initialized = false;
-      var restore = this.override( obj, {
-        get: function() {
-          return this.$super();
+    var listeners = store[ this.value ];
+    if ( !listeners ) {
+      listeners = store[ this.value ] = [];
+      let unwatch = this.override( obj, {
+        get( $super ) {
+          return $super();
         },
-        set: function( value ) {
-          if ( !initialized ) {
-            curval = value;
-          } else {
-            value = this.$super( value );
-            if ( value !== curval ) {
-              var oldval = curval;
-              curval = value;
-              listeners.slice().forEach( function( listener ) {
-                listener.call( undefined, value, oldval );
-              });
-            }
+        set( value, $super ) {
+          var oldval = curval;
+          $super( value );
+          var newval = $super();
+          curval = newval;
+          if ( newval !== oldval ) {
+            listeners.slice().forEach( listener => {
+              listener.call( undefined, newval, oldval );
+            });
           }
         }
       });
-      initialized = true;
-      listeners.destroy = ( function( path ) {
-        restore();
-        delete store[ path ];
-      }).bind( undefined, this.value );
+      let curval = this.get( obj );
+      listeners.teardown = () => {
+        unwatch();
+        delete store[ this.value ];
+      };
     }
-    store[ this.value ].push( listener );
+    listeners.push( listener );
+    return () => {
+      this.unwatch( obj, listener );
+    };
   }
 
   unwatch( obj, listener ) {
-    var listeners = obj && obj.$$pathListeners;
-    if ( listeners && listeners[ this.value ] ) {
-      var index = listeners[ this.value ].indexOf( listener );
-      if ( index > -1 ) {
-        listeners[ this.value ].splice( index, 1 );
-        if ( listeners[ this.value ].length === 0 ) {
-          listeners[ this.value ].destroy();
-        }
+    var store = obj && obj[ pathListenersKey ];
+    var listeners = store && store[ this.value ] || [];
+    var index = listeners.indexOf( listener );
+    if ( index > -1 ) {
+      listeners.splice( index, 1 );
+      if ( listeners.length === 0 ) {
+        listeners.teardown();
       }
     }
   }
 
   get( obj ) {
-    if ( typeof obj !== 'object' || obj === null ) {
-      return;
-    }
-    var ret = obj;
-    var i = 0;
-    var lastIndex = this.path.length - 1;
-    for ( ; i < lastIndex; i++ ) {
-      ret = ret[ this.path[ i ] ];
-      if ( typeof ret !== 'object' || ret === null ) {
-        break;
+    for ( let segment of this.segments ) {
+      if ( typeof obj !== 'object' || obj === null ) {
+        return;
       }
+      obj = obj[ segment ];
     }
-    return ret && ret[ this.path[ lastIndex ] ];
+    return obj;
   }
 
   set( obj, value ) {
-    var i = 0;
-    var lastIndex = this.path.length - 1;
-    for ( ; i < lastIndex; i++ ) {
-      if ( typeof obj[ this.path[ i ] ] !== 'object' ) {
-        obj[ this.path[ i ] ] = {};
-      }
-      obj = obj[ this.path[ i ] ];
+    if ( typeof obj !== 'object' || obj === null ) {
+      return;
     }
-    obj[ this.path[ lastIndex ] ] = value;
+    for ( let segment of this.segments.slice( 0, -1 ) ) {
+      let value = obj[ segment ];
+      if ( typeof value !== 'object' || value === null ) {
+        value = obj[ segment ] = {};
+      }
+      obj = value;
+    }
+    obj[ this.segments[ this.segments.length - 1 ] ] = value;
   }
-}
+
+  _validateObject( obj ) {
+    if ( obj === null ) {
+      throw new Error( 'Object cannot be null.' );
+    }
+    if ( typeof obj !== 'object' ) {
+      throw new Error( 'First argument must be an object.' );
+    }
+  }
+};
