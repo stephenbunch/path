@@ -166,6 +166,20 @@ export default class Path {
     obj[ this.segments[ this.segments.length - 1 ] ] = value;
   }
 
+  exists( obj ) {
+    for ( let segment of this.segments ) {
+      if ( typeof obj !== 'object' || obj === null ) {
+        return false;
+      }
+      if ( segment in obj ) {
+        obj = obj[ segment ];
+      } else {
+        return false;
+      }
+    }
+    return true;
+  }
+
   _validateObject( obj ) {
     if ( obj === null ) {
       throw new Error( 'Object cannot be null.' );

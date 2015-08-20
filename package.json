@@ -1,6 +1,6 @@
 {
   "name": "@stephenbunch/path",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Provides simple object manipulation using path strings.",
   "main": "index.js",
   "scripts": {

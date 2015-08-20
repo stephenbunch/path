@@ -182,4 +182,18 @@ describe( 'Path', function() {
       expect( foo.bar.baz ).to.equal( 3 );
     });
   });
+
+  describe( '.exists( obj )', function() {
+    it( 'should return true if the path exists', function() {
+      var obj = {};
+      var path = Path( 'foo.bar.baz' );
+      expect( path.exists( obj ) ).to.equal( false );
+      obj.foo = {};
+      expect( path.exists( obj ) ).to.equal( false );
+      obj.foo.bar = {};
+      expect( path.exists( obj ) ).to.equal( false );
+      obj.foo.bar.baz = undefined;
+      expect( path.exists( obj ) ).to.equal( true );
+    });
+  });
 });
